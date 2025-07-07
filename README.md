@@ -15,6 +15,9 @@ What is Terraform?
 
 **Terraform** is an **open-source Infrastructure as Code (IaC) tool** created by HashiCorp that allows you to **define, provision, and manage cloud infrastructure using code**.
 
+![worflow](https://github.com/user-attachments/assets/7f36dab0-04ad-489a-9800-be0d495a8aed)
+
+
 > Terraform setup : [https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 Prerequisites
